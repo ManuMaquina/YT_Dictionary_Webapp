@@ -56,9 +56,13 @@ export class AuthService {
   }
 
   async signOut(): Promise<void> {
-    await this.supabase.client.auth.signOut();
-    this.currentUser.set(null);
-    this.router.navigate(['/auth/login']);
+    try {
+      await this.supabase.client.auth.signOut();
+    } finally {
+      // always clear local state and redirect, even if the server call fails
+      this.currentUser.set(null);
+      this.router.navigate(['/auth/login']);
+    }
   }
 
   get isAuthenticated(): boolean {
