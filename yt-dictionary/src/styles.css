@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --color-primary-50: #f0f4ff;
+  --color-primary-100: #dbe4ff;
+  --color-primary-600: #4361ee;
+  --color-primary-700: #3a56d4;
+  --color-primary-800: #2d44b0;
+  --color-primary-900: #1e2f80;
+}
+
+html, body {
+  height: 100%;
+}
