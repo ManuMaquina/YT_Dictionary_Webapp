@@ -1,0 +1,71 @@
+<div class="max-w-4xl mx-auto px-4 py-12">
+
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-4xl font-extrabold text-gray-900 mb-2">Dictionary</h1>
+    <p class="text-gray-500">{{ words().length }} approved words</p>
+  </div>
+
+  <!-- Search box -->
+  <div class="mb-8">
+    <input
+      type="text"
+      placeholder="Search words or definitions..."
+      (input)="onSearch($event)"
+      class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent shadow-sm" />
+  </div>
+
+  <!-- Loading state -->
+  @if (loading()) {
+    <div class="flex justify-center py-24">
+      <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+    </div>
+  }
+
+  <!-- Error state -->
+  @if (error()) {
+    <div class="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+      {{ error() }}
+    </div>
+  }
+
+  <!-- Empty search result -->
+  @if (!loading() && !error() && filteredWords().length === 0 && searchTerm()) {
+    <div class="text-center py-16 text-gray-400">
+      <p class="text-lg">No words match "{{ searchTerm() }}"</p>
+    </div>
+  }
+
+  <!-- Empty dictionary -->
+  @if (!loading() && !error() && words().length === 0) {
+    <div class="text-center py-16 text-gray-400">
+      <p class="text-4xl mb-3">📭</p>
+      <p class="text-lg font-medium">No words yet</p>
+      <p class="text-sm mt-1">Be the first to submit one.</p>
+    </div>
+  }
+
+  <!-- Word list -->
+  @if (!loading() && filteredWords().length > 0) {
+    <div class="divide-y divide-gray-100 border border-gray-100 rounded-xl overflow-hidden shadow-sm">
+      @for (word of filteredWords(); track word.id) {
+        <a [routerLink]="['/dictionary', word.term]"
+           class="flex items-start justify-between p-5 bg-white hover:bg-indigo-50 transition-colors group">
+
+          <div class="flex-1 min-w-0">
+            <h2 class="text-lg font-semibold text-indigo-700 group-hover:text-indigo-800 capitalize">
+              {{ word.term }}
+            </h2>
+            <p class="text-sm text-gray-600 mt-1 line-clamp-2">
+              {{ word.definition }}
+            </p>
+          </div>
+
+          <span class="ml-4 text-gray-300 group-hover:text-indigo-400 text-xl self-center">›</span>
+
+        </a>
+      }
+    </div>
+  }
+
+</div>

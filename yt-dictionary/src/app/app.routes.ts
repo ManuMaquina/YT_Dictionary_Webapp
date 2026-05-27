@@ -12,6 +12,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/dictionary/dictionary.component').then(m => m.DictionaryComponent),
   },
   {
+    path: 'dictionary/:term',
+    loadComponent: () => import('./features/dictionary/word-detail/word-detail.component').then(m => m.WordDetailComponent),
+  },
+  {
     path: 'submit',
     canActivate: [authGuard],
     loadComponent: () => import('./features/submit/submit.component').then(m => m.SubmitComponent),
