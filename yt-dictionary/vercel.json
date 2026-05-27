@@ -1,5 +1,5 @@
 {
   "framework": "angular",
-  "buildCommand": "npm run build",
+  "buildCommand": "npm run build:vercel",
   "outputDirectory": "dist/yt-dictionary/browser"
 }
