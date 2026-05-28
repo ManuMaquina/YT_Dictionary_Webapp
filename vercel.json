@@ -1,0 +1,8 @@
+{
+  "rootDirectory": "yt-dictionary",
+  "buildCommand": "npm run build:vercel",
+  "outputDirectory": "dist/yt-dictionary/browser",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

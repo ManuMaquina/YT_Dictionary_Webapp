@@ -4,7 +4,13 @@
   <div class="mb-8 flex items-end justify-between gap-4">
     <div>
       <h1 class="text-4xl font-extrabold text-base-content">Dictionary</h1>
-      <p class="text-base-content/50 mt-1">{{ words().length }} approved words</p>
+      <p class="text-base-content/50 mt-1">
+        @if (searchTerm()) {
+          {{ filteredWords().length }} of {{ words().length }} words
+        } @else {
+          {{ words().length }} approved words
+        }
+      </p>
     </div>
     @if (auth.isAuthenticated) {
       <a routerLink="/submit" class="btn btn-primary btn-sm shrink-0">
@@ -20,10 +26,19 @@
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
     </svg>
-    <input type="text"
+    <input #searchInput
+           type="text"
            placeholder="Search words or definitions…"
            (input)="onSearch($event)"
            class="grow" />
+    @if (searchTerm()) {
+      <button type="button"
+              (click)="clearSearch()"
+              class="btn btn-ghost btn-xs btn-circle"
+              aria-label="Clear search">
+        ✕
+      </button>
+    }
   </label>
 
   <!-- Loading -->
@@ -44,6 +59,7 @@
   @if (!loading() && !error() && filteredWords().length === 0 && searchTerm()) {
     <div class="text-center py-16 text-base-content/40">
       <p class="text-lg">No words match "<em>{{ searchTerm() }}</em>"</p>
+      <button class="btn btn-ghost btn-sm mt-3" (click)="clearSearch()">Clear search</button>
     </div>
   }
 
@@ -57,9 +73,9 @@
   }
 
   <!-- Word list -->
-  @if (!loading() && filteredWords().length > 0) {
+  @if (!loading() && pagedWords().length > 0) {
     <div class="card bg-base-100 border border-base-200 shadow-sm overflow-hidden">
-      @for (word of filteredWords(); track word.id; let last = $last) {
+      @for (word of pagedWords(); track word.id; let last = $last) {
         <a [routerLink]="['/dictionary', word.term]"
            class="flex items-start justify-between px-5 py-4 hover:bg-base-200/60
                   transition-colors group"
@@ -82,6 +98,49 @@
         </a>
       }
     </div>
+
+    <!-- Pagination -->
+    @if (totalPages() > 1) {
+      <div class="flex justify-center items-center gap-1 mt-6">
+        <button class="btn btn-ghost btn-sm"
+                [disabled]="currentPage() === 1"
+                (click)="goToPage(currentPage() - 1)"
+                aria-label="Previous page">‹</button>
+
+        @if (pageRange()[0] > 1) {
+          <button class="btn btn-ghost btn-sm" (click)="goToPage(1)">1</button>
+          @if (pageRange()[0] > 2) {
+            <span class="px-1 text-base-content/40">…</span>
+          }
+        }
+
+        @for (page of pageRange(); track page) {
+          <button class="btn btn-sm"
+                  [class]="page === currentPage() ? 'btn-primary' : 'btn-ghost'"
+                  (click)="goToPage(page)">
+            {{ page }}
+          </button>
+        }
+
+        @if (pageRange()[pageRange().length - 1] < totalPages()) {
+          @if (pageRange()[pageRange().length - 1] < totalPages() - 1) {
+            <span class="px-1 text-base-content/40">…</span>
+          }
+          <button class="btn btn-ghost btn-sm" (click)="goToPage(totalPages())">
+            {{ totalPages() }}
+          </button>
+        }
+
+        <button class="btn btn-ghost btn-sm"
+                [disabled]="currentPage() === totalPages()"
+                (click)="goToPage(currentPage() + 1)"
+                aria-label="Next page">›</button>
+      </div>
+
+      <p class="text-center text-xs text-base-content/40 mt-2">
+        Page {{ currentPage() }} of {{ totalPages() }}
+      </p>
+    }
   }
 
 </div>
