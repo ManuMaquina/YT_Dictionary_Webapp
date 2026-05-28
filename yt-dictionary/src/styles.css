@@ -1,15 +1,23 @@
 @import "tailwindcss";
+@plugin "daisyui";
 
+/* Tailwind v4 @theme is for design tokens and utility generation.
+   Do NOT put color overrides here — Tailwind stores oklch values
+   as raw channels (without the oklch() wrapper) for opacity-modifier
+   support, but daisyUI reads --color-primary as the full color and
+   uses it inside color-mix(), so the two formats clash and produce
+   black buttons. Use a plain :root block instead (see below). */
 @theme {
   --font-sans: 'Inter', system-ui, sans-serif;
-  --color-primary-50: #f0f4ff;
-  --color-primary-100: #dbe4ff;
-  --color-primary-600: #4361ee;
-  --color-primary-700: #3a56d4;
-  --color-primary-800: #2d44b0;
-  --color-primary-900: #1e2f80;
 }
 
-html, body {
-  height: 100%;
+/* Override daisyUI's primary to the app's indigo color.
+   Unlayered :root placed after @plugin "daisyui" wins the
+   cascade over daisyUI's own :root declaration. */
+:root,
+[data-theme="light"] {
+  --color-primary: oklch(52% 0.247 264);
+  --color-primary-content: oklch(100% 0 0);
 }
+
+html, body { height: 100%; }

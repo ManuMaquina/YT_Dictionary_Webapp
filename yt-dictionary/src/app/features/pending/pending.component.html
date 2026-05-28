@@ -2,104 +2,97 @@
   <div class="max-w-3xl mx-auto">
 
     <div class="mb-8">
-      <h1 class="text-3xl font-extrabold text-gray-900 mb-1">Pending Submissions</h1>
-      <p class="text-gray-500 text-sm">
+      <h1 class="text-3xl font-extrabold text-base-content mb-1">Pending Submissions</h1>
+      <p class="text-base-content/50 text-sm">
         Review community word submissions and vote to approve or reject them.
-        A majority of approvers must vote before a word is added to the dictionary.
+        A majority of approvers must agree before a word is added.
       </p>
     </div>
 
-    <!-- Loading spinner -->
+    <!-- Loading -->
     @if (loading()) {
       <div class="flex justify-center py-20">
-        <div class="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+        <span class="loading loading-spinner loading-lg text-primary"></span>
       </div>
     }
 
-    <!-- Error state -->
+    <!-- Error -->
     @if (!loading() && error()) {
-      <div class="p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 mb-6 flex items-center justify-between">
+      <div role="alert" class="alert alert-error mb-6">
         <span>{{ error() }}</span>
-        <button (click)="load()"
-                class="ml-4 text-sm font-medium text-red-700 underline hover:no-underline">
-          Retry
-        </button>
+        <button class="btn btn-ghost btn-sm" (click)="load()">Retry</button>
       </div>
     }
 
     <!-- Empty state -->
     @if (!loading() && !error() && words().length === 0) {
-      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-14 text-center">
-        <div class="text-5xl mb-4">✅</div>
-        <h2 class="text-xl font-bold text-gray-800 mb-2">All caught up!</h2>
-        <p class="text-gray-500 text-sm">No pending submissions to review right now.</p>
+      <div class="card bg-base-100 border border-base-200 shadow-sm text-center">
+        <div class="card-body items-center py-14">
+          <div class="text-5xl mb-3" aria-hidden="true">✅</div>
+          <h2 class="card-title">All caught up!</h2>
+          <p class="text-base-content/50 text-sm">No pending submissions to review right now.</p>
+        </div>
       </div>
     }
 
     <!-- Word cards -->
     @for (word of words(); track word.id) {
-      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-4">
+      <div class="card bg-base-100 border border-base-200 shadow-sm mb-4">
+        <div class="card-body">
 
-        <div class="flex justify-between items-start mb-3">
-          <h2 class="text-xl font-bold text-gray-900">{{ word.term }}</h2>
-          <span class="text-xs text-gray-400 shrink-0 ml-3">
-            {{ word.created_at | date:'mediumDate' }}
-          </span>
-        </div>
-
-        <p class="text-gray-700 text-sm leading-relaxed mb-2">{{ word.definition }}</p>
-
-        @if (word.example) {
-          <p class="text-sm text-gray-500 italic mb-3">"{{ word.example }}"</p>
-        }
-
-        <p class="text-xs text-gray-400">
-          Submitted by
-          <span class="font-medium text-gray-600">
-            @{{ word.profiles?.username ?? 'unknown' }}
-          </span>
-        </p>
-
-        <!-- Voting row -->
-        <div class="mt-5 pt-4 border-t border-gray-100 flex items-center justify-between gap-3 flex-wrap">
-
-          <div class="flex gap-2">
-            <button (click)="vote(word.id, 'approve')"
-                    [disabled]="isVoting(word.id)"
-                    [class]="approveClass(word)">
-              ✓ Approve
-              <span class="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1
-                           rounded text-xs font-semibold
-                           bg-white/25 text-current">
-                {{ word.approveCount }}
-              </span>
-            </button>
-
-            <button (click)="vote(word.id, 'reject')"
-                    [disabled]="isVoting(word.id)"
-                    [class]="rejectClass(word)">
-              ✗ Reject
-              <span class="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1
-                           rounded text-xs font-semibold
-                           bg-white/25 text-current">
-                {{ word.rejectCount }}
-              </span>
-            </button>
+          <div class="flex justify-between items-start gap-3">
+            <h2 class="card-title text-xl">{{ word.term }}</h2>
+            <span class="text-xs text-base-content/40 shrink-0 pt-1">
+              {{ word.created_at | date:'mediumDate' }}
+            </span>
           </div>
 
-          @if (totalApprovers() > 0) {
-            <div class="flex items-center gap-2 text-xs text-gray-400">
-              <div class="w-24 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                <div class="h-full bg-indigo-400 rounded-full transition-all"
-                     [style.width.%]="((word.approveCount + word.rejectCount) / totalApprovers()) * 100">
-                </div>
-              </div>
-              {{ word.approveCount + word.rejectCount }} / {{ totalApprovers() }} voted
-            </div>
+          <p class="text-base-content/80 text-sm leading-relaxed">{{ word.definition }}</p>
+
+          @if (word.example) {
+            <p class="text-sm text-base-content/50 italic">"{{ word.example }}"</p>
           }
 
-        </div>
+          <p class="text-xs text-base-content/40">
+            Submitted by
+            <span class="font-medium text-base-content/60">
+              @{{ word.profiles?.username ?? 'unknown' }}
+            </span>
+          </p>
 
+          <div class="divider my-1"></div>
+
+          <!-- Voting row -->
+          <div class="flex items-center justify-between gap-3 flex-wrap">
+
+            <div class="flex gap-2">
+              <button (click)="vote(word.id, 'approve')"
+                      [disabled]="isVoting(word.id)"
+                      [class]="approveClass(word)">
+                ✓ Approve
+                <span class="badge badge-sm ml-1">{{ word.approveCount }}</span>
+              </button>
+
+              <button (click)="vote(word.id, 'reject')"
+                      [disabled]="isVoting(word.id)"
+                      [class]="rejectClass(word)">
+                ✗ Reject
+                <span class="badge badge-sm ml-1">{{ word.rejectCount }}</span>
+              </button>
+            </div>
+
+            @if (totalApprovers() > 0) {
+              <div class="flex items-center gap-2 text-xs text-base-content/40">
+                <progress class="progress progress-primary w-20 h-1.5"
+                          [value]="word.approveCount + word.rejectCount"
+                          [max]="totalApprovers()"></progress>
+                {{ word.approveCount + word.rejectCount }} / {{ totalApprovers() }} voted
+              </div>
+            }
+
+          </div>
+
+        </div>
       </div>
     }
 

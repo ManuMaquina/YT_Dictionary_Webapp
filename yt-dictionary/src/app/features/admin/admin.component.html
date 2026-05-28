@@ -1,0 +1,122 @@
+<div class="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 py-12 px-4">
+  <div class="max-w-4xl mx-auto">
+
+    <div class="mb-8">
+      <h1 class="text-3xl font-extrabold text-base-content mb-1">Admin Panel</h1>
+      <p class="text-base-content/50 text-sm">
+        Manage user roles. Approvers vote on submissions; admins have full access.
+      </p>
+    </div>
+
+    <!-- Loading -->
+    @if (loading()) {
+      <div class="flex justify-center py-20">
+        <span class="loading loading-spinner loading-lg text-primary"></span>
+      </div>
+    }
+
+    <!-- Error -->
+    @if (!loading() && error()) {
+      <div role="alert" class="alert alert-error mb-6">
+        <span>{{ error() }}</span>
+        <button class="btn btn-ghost btn-sm" (click)="load()">Retry</button>
+      </div>
+    }
+
+    @if (!loading() && !error()) {
+
+      <!-- Stats -->
+      <div class="stats stats-horizontal bg-base-100 border border-base-200
+                  shadow-sm w-full mb-6 rounded-2xl overflow-hidden">
+        <div class="stat">
+          <div class="stat-title">Total Users</div>
+          <div class="stat-value text-2xl">{{ profiles().length }}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-title">Readers</div>
+          <div class="stat-value text-2xl text-base-content/50">{{ readerCount }}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-title">Approvers</div>
+          <div class="stat-value text-2xl text-secondary">{{ approverCount }}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-title">Admins</div>
+          <div class="stat-value text-2xl text-primary">{{ adminCount }}</div>
+        </div>
+      </div>
+
+      <!-- User table -->
+      <div class="card bg-base-100 border border-base-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="table">
+            <thead>
+              <tr class="text-xs uppercase tracking-wide text-base-content/50">
+                <th>User</th>
+                <th>Role</th>
+                <th>Joined</th>
+                <th class="text-right">Change Role</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (profile of profiles(); track profile.id) {
+                <tr class="hover">
+
+                  <!-- User cell -->
+                  <td>
+                    <div class="flex items-center gap-3">
+                      <div class="avatar placeholder">
+                        <div class="bg-primary/10 text-primary rounded-full w-9 h-9">
+                          <span class="text-sm font-bold">
+                            {{ profile.username[0].toUpperCase() }}
+                          </span>
+                        </div>
+                      </div>
+                      <div>
+                        <div class="font-medium text-sm">@{{ profile.username }}</div>
+                        @if (isCurrentUser(profile.id)) {
+                          <div class="text-xs text-primary">you</div>
+                        }
+                      </div>
+                    </div>
+                  </td>
+
+                  <!-- Role badge -->
+                  <td>
+                    <span [class]="roleBadgeClass(profile.role)">{{ profile.role }}</span>
+                  </td>
+
+                  <!-- Joined date -->
+                  <td class="text-sm text-base-content/40 whitespace-nowrap">
+                    {{ profile.created_at | date:'mediumDate' }}
+                  </td>
+
+                  <!-- Role buttons -->
+                  <td class="text-right">
+                    @if (isCurrentUser(profile.id)) {
+                      <span class="text-xs text-base-content/30 italic px-2">locked</span>
+                    } @else {
+                      <div class="flex gap-1 justify-end">
+                        @for (role of roles; track role) {
+                          <button (click)="setRole(profile.id, role)"
+                                  [disabled]="isUpdating(profile.id)"
+                                  [class]="roleButtonClass(profile, role)"
+                                  class="btn btn-xs">
+                            {{ role }}
+                          </button>
+                        }
+                      </div>
+                    }
+                  </td>
+
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    }
+
+  </div>
+</div>
