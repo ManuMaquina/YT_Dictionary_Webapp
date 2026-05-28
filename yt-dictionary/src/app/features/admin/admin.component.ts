@@ -2,6 +2,7 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { AuthService } from '../../core/auth/auth.service';
 import { ProfileService } from '../../core/services/profile.service';
+import { ToastService } from '../../core/services/toast.service';
 import { Profile, UserRole } from '../../core/models/user.model';
 
 @Component({
@@ -13,16 +14,18 @@ import { Profile, UserRole } from '../../core/models/user.model';
 export class AdminComponent implements OnInit {
   private profileService = inject(ProfileService);
   private auth = inject(AuthService);
+  private toastService = inject(ToastService);
 
   loading = signal(true);
   error = signal<string | null>(null);
   profiles = signal<Profile[]>([]);
-  // Tracks user IDs with an in-flight role-change request so we can
-  // disable controls while the server round-trip completes.
   updatingIds = signal<string[]>([]);
 
-  // Ordered for display: ascending privilege level.
   readonly roles: UserRole[] = ['reader', 'approver', 'admin'];
+
+  get readerCount(): number   { return this.profiles().filter(p => p.role === 'reader').length; }
+  get approverCount(): number { return this.profiles().filter(p => p.role === 'approver').length; }
+  get adminCount(): number    { return this.profiles().filter(p => p.role === 'admin').length; }
 
   async ngOnInit(): Promise<void> {
     await this.load();
@@ -50,53 +53,42 @@ export class AdminComponent implements OnInit {
 
   async setRole(userId: string, role: UserRole): Promise<void> {
     const profile = this.profiles().find(p => p.id === userId);
-    // Skip if it's the current user, already updating, or the role didn't change.
     if (!profile || this.isCurrentUser(userId) || this.isUpdating(userId) || profile.role === role) {
       return;
     }
 
     this.updatingIds.update(ids => [...ids, userId]);
-
-    // Optimistic update: reflect the change immediately so the UI
-    // doesn't feel sluggish, then confirm or revert on the server response.
     this.profiles.update(ps => ps.map(p => (p.id === userId ? { ...p, role } : p)));
 
     try {
       await this.profileService.updateRole(userId, role);
+      this.toastService.success(`@${profile.username} is now ${role}`);
     } catch {
-      // Revert by reloading the full list from the server.
+      this.toastService.error('Failed to update role. Please try again.');
       await this.load();
     } finally {
       this.updatingIds.update(ids => ids.filter(id => id !== userId));
     }
   }
 
-  // ── Class helpers ────────────────────────────────────────────
-  // Full literal class strings are used so Tailwind's JIT scanner
-  // can detect every class name at build time.
-
   roleBadgeClass(role: UserRole): string {
-    const base = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium';
-    const colors: Record<UserRole, string> = {
-      admin: 'bg-purple-100 text-purple-800',
-      approver: 'bg-blue-100 text-blue-800',
-      reader: 'bg-gray-100 text-gray-600',
+    const map: Record<UserRole, string> = {
+      admin:    'badge badge-primary badge-sm',
+      approver: 'badge badge-secondary badge-sm',
+      reader:   'badge badge-ghost badge-sm',
     };
-    return `${base} ${colors[role]}`;
+    return map[role];
   }
 
-  get readerCount(): number { return this.profiles().filter(p => p.role === 'reader').length; }
-  get approverCount(): number { return this.profiles().filter(p => p.role === 'approver').length; }
-  get adminCount(): number { return this.profiles().filter(p => p.role === 'admin').length; }
-
   roleButtonClass(profile: Profile, role: UserRole): string {
-    const base = 'px-3 py-1.5 rounded-md text-xs font-medium transition-colors';
-    const active: Record<UserRole, string> = {
-      admin: 'bg-purple-600 text-white',
-      approver: 'bg-blue-600 text-white',
-      reader: 'bg-gray-600 text-white',
-    };
-    const inactive = 'bg-gray-100 text-gray-500 hover:bg-gray-200';
-    return `${base} ${profile.role === role ? active[role] : inactive}`;
+    if (profile.role === role) {
+      const active: Record<UserRole, string> = {
+        admin:    'btn-primary',
+        approver: 'btn-secondary',
+        reader:   'btn-neutral',
+      };
+      return active[role];
+    }
+    return 'btn-ghost border border-base-300';
   }
 }

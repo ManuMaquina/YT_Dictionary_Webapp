@@ -1,6 +1,7 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { WordService } from '../../core/services/word.service';
+import { AuthService } from '../../core/auth/auth.service';
 import { Word } from '../../core/models/word.model';
 
 @Component({
@@ -11,6 +12,7 @@ import { Word } from '../../core/models/word.model';
 })
 export class DictionaryComponent implements OnInit {
   private wordService = inject(WordService);
+  auth = inject(AuthService);
 
   // Raw data from the database
   words = signal<Word[]>([]);

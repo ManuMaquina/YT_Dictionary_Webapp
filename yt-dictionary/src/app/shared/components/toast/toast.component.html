@@ -1,0 +1,12 @@
+<div class="toast toast-top toast-end z-[200] p-4">
+  @for (toast of toastService.messages(); track toast.id) {
+    <div [class]="alertClass(toast.type)" role="alert">
+      <span class="text-sm">{{ toast.message }}</span>
+      <button class="btn btn-ghost btn-xs btn-circle"
+              (click)="toastService.dismiss(toast.id)"
+              aria-label="Dismiss">
+        ✕
+      </button>
+    </div>
+  }
+</div>
