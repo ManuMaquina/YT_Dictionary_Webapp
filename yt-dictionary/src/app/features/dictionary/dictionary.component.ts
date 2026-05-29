@@ -1,7 +1,10 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { WordService } from '../../core/services/word.service';
+import { AuthService } from '../../core/auth/auth.service';
 import { Word } from '../../core/models/word.model';
+
+const PAGE_SIZE = 25;
 
 @Component({
   selector: 'app-dictionary',
@@ -10,20 +13,17 @@ import { Word } from '../../core/models/word.model';
   templateUrl: './dictionary.component.html',
 })
 export class DictionaryComponent implements OnInit {
+  @ViewChild('searchInput') searchInput!: ElementRef<HTMLInputElement>;
+
   private wordService = inject(WordService);
+  auth = inject(AuthService);
 
-  // Raw data from the database
   words = signal<Word[]>([]);
-
-  // What the user has typed into the search box
   searchTerm = signal('');
-
-  // UI state
+  currentPage = signal(1);
   loading = signal(true);
   error = signal<string | null>(null);
 
-  // Derived signal: recomputes automatically whenever words() or searchTerm() changes.
-  // No manual subscription or event wiring needed.
   filteredWords = computed(() => {
     const term = this.searchTerm().toLowerCase().trim();
     if (!term) return this.words();
@@ -34,9 +34,14 @@ export class DictionaryComponent implements OnInit {
     );
   });
 
-  // ngOnInit is an Angular lifecycle hook that runs once, after the
-  // component's inputs are set and it's ready to work. The right place
-  // to trigger async data loading.
+  totalPages = computed(() => Math.max(1, Math.ceil(this.filteredWords().length / PAGE_SIZE)));
+
+  pagedWords = computed(() => {
+    const page = this.currentPage();
+    const start = (page - 1) * PAGE_SIZE;
+    return this.filteredWords().slice(start, start + PAGE_SIZE);
+  });
+
   async ngOnInit(): Promise<void> {
     try {
       const data = await this.wordService.getApprovedWords();
@@ -49,7 +54,28 @@ export class DictionaryComponent implements OnInit {
   }
 
   onSearch(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    this.searchTerm.set(input.value);
+    this.searchTerm.set((event.target as HTMLInputElement).value);
+    this.currentPage.set(1);
   }
+
+  clearSearch(): void {
+    this.searchTerm.set('');
+    this.currentPage.set(1);
+    if (this.searchInput) this.searchInput.nativeElement.value = '';
+  }
+
+  goToPage(page: number): void {
+    this.currentPage.set(Math.max(1, Math.min(page, this.totalPages())));
+  }
+
+  pageRange = computed(() => {
+    const total = this.totalPages();
+    const current = this.currentPage();
+    const delta = 2;
+    const range: number[] = [];
+    for (let i = Math.max(1, current - delta); i <= Math.min(total, current + delta); i++) {
+      range.push(i);
+    }
+    return range;
+  });
 }

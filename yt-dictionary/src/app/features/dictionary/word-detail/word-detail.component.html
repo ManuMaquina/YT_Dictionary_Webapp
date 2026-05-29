@@ -2,34 +2,33 @@
 
   <!-- Back link -->
   <a routerLink="/dictionary"
-     class="inline-flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-800 mb-8">
+     class="inline-flex items-center gap-1 text-sm link link-primary mb-8">
     ‹ Back to Dictionary
   </a>
 
   <!-- Loading -->
   @if (loading()) {
     <div class="flex justify-center py-24">
-      <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+      <span class="loading loading-spinner loading-lg text-primary"></span>
     </div>
   }
 
   <!-- Not found -->
   @if (notFound()) {
     <div class="text-center py-20">
-      <p class="text-5xl mb-4">🔍</p>
-      <h1 class="text-2xl font-bold text-gray-800 mb-2">Word not found</h1>
-      <p class="text-gray-500 mb-6">This word hasn't been added to the dictionary yet.</p>
-      <a routerLink="/submit"
-         class="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium text-sm">
-        Submit it
-      </a>
+      <p class="text-5xl mb-4" aria-hidden="true">🔍</p>
+      <h1 class="text-2xl font-bold text-base-content mb-2">Word not found</h1>
+      <p class="text-base-content/60 mb-6">
+        This word hasn't been added to the dictionary yet.
+      </p>
+      <a routerLink="/submit" class="btn btn-primary btn-sm">Submit it</a>
     </div>
   }
 
   <!-- Error -->
   @if (error()) {
-    <div class="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-      {{ error() }}
+    <div role="alert" class="alert alert-error">
+      <span>{{ error() }}</span>
     </div>
   }
 
@@ -37,30 +36,33 @@
   @if (word(); as w) {
     <article>
 
-      <!-- Term -->
-      <h1 class="text-5xl font-extrabold text-gray-900 capitalize mb-1">
+      <h1 class="text-5xl font-extrabold text-base-content capitalize mb-2">
         {{ w.term }}
       </h1>
 
-      <!-- Meta -->
-      <p class="text-sm text-gray-400 mb-8">
+      <p class="text-sm text-base-content/40 mb-8">
         Added {{ w.created_at | date: 'MMMM d, y' }}
         @if (w.profiles?.username) {
-          · by <span class="text-indigo-600">{{ w.profiles!.username }}</span>
+          · by
+          <span class="text-primary font-medium">{{ w.profiles!.username }}</span>
         }
       </p>
 
+      <div class="divider"></div>
+
       <!-- Definition -->
       <div class="mb-8">
-        <h2 class="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">Definition</h2>
-        <p class="text-xl text-gray-800 leading-relaxed">{{ w.definition }}</p>
+        <h2 class="text-xs font-semibold uppercase tracking-widest
+                   text-base-content/40 mb-3">Definition</h2>
+        <p class="text-xl text-base-content leading-relaxed">{{ w.definition }}</p>
       </div>
 
-      <!-- Example (optional) -->
+      <!-- Example -->
       @if (w.example) {
-        <div class="border-l-4 border-indigo-200 pl-5 py-1">
-          <h2 class="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">Example</h2>
-          <p class="text-gray-600 italic">"{{ w.example }}"</p>
+        <div class="border-l-4 border-primary/30 pl-5 py-1">
+          <h2 class="text-xs font-semibold uppercase tracking-widest
+                     text-base-content/40 mb-2">Example</h2>
+          <p class="text-base-content/70 italic">"{{ w.example }}"</p>
         </div>
       }
 

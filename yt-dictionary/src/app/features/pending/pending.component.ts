@@ -2,9 +2,9 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { AuthService } from '../../core/auth/auth.service';
 import { WordService } from '../../core/services/word.service';
+import { ToastService } from '../../core/services/toast.service';
 import { Word } from '../../core/models/word.model';
 
-// Extends Word with aggregated vote data for the review queue UI.
 interface PendingWordVM extends Word {
   approveCount: number;
   rejectCount: number;
@@ -20,13 +20,12 @@ interface PendingWordVM extends Word {
 export class PendingComponent implements OnInit {
   private wordService = inject(WordService);
   private auth = inject(AuthService);
+  private toastService = inject(ToastService);
 
   loading = signal(true);
   error = signal<string | null>(null);
   words = signal<PendingWordVM[]>([]);
   totalApprovers = signal(0);
-  // Tracks which word IDs have an in-flight vote request so we can
-  // disable both buttons while the server round-trip completes.
   votingWordIds = signal<string[]>([]);
 
   async ngOnInit(): Promise<void> {
@@ -81,8 +80,6 @@ export class PendingComponent implements OnInit {
 
     this.votingWordIds.update(ids => [...ids, wordId]);
 
-    // Optimistic update: reflect the new vote immediately so the UI
-    // feels instant, then confirm or revert based on the server response.
     this.words.update(ws =>
       ws.map(w => {
         if (w.id !== wordId) return w;
@@ -104,10 +101,8 @@ export class PendingComponent implements OnInit {
 
     try {
       await this.wordService.castVote(wordId, userId, decision);
+      this.toastService.success(decision === 'approve' ? 'Vote: approved' : 'Vote: rejected');
 
-      // Remove the word from the queue once a majority has voted.
-      // The DB trigger already changed the word's status; we just
-      // clean up the local list to match.
       const majority = this.totalApprovers() / 2.0;
       this.words.update(ws =>
         ws.filter(w => {
@@ -116,41 +111,20 @@ export class PendingComponent implements OnInit {
         })
       );
     } catch {
-      // On error, reload from the server to restore a consistent state.
+      this.toastService.error('Failed to cast vote. Please try again.');
       await this.load();
     } finally {
       this.votingWordIds.update(ids => ids.filter(id => id !== wordId));
     }
   }
 
-  // Returns the full Tailwind class string for an approve or reject
-  // button. Full literal strings are used so Tailwind's JIT scanner
-  // can detect every class name at build time.
   approveClass(word: PendingWordVM): string {
-    const base =
-      'flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors';
-    const active = 'bg-green-600 text-white hover:bg-green-700';
-    const inactive =
-      'bg-gray-100 text-gray-700 hover:bg-green-50 hover:text-green-700 border border-gray-200';
-    const disabledCls = 'opacity-50 cursor-not-allowed';
-    return [
-      base,
-      word.userVote === 'approve' ? active : inactive,
-      this.isVoting(word.id) ? disabledCls : '',
-    ].join(' ');
+    const base = 'btn btn-sm gap-1';
+    return base + ' ' + (word.userVote === 'approve' ? 'btn-success' : 'btn-ghost border border-base-300');
   }
 
   rejectClass(word: PendingWordVM): string {
-    const base =
-      'flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors';
-    const active = 'bg-red-600 text-white hover:bg-red-700';
-    const inactive =
-      'bg-gray-100 text-gray-700 hover:bg-red-50 hover:text-red-700 border border-gray-200';
-    const disabledCls = 'opacity-50 cursor-not-allowed';
-    return [
-      base,
-      word.userVote === 'reject' ? active : inactive,
-      this.isVoting(word.id) ? disabledCls : '',
-    ].join(' ');
+    const base = 'btn btn-sm gap-1';
+    return base + ' ' + (word.userVote === 'reject' ? 'btn-error' : 'btn-ghost border border-base-300');
   }
 }
